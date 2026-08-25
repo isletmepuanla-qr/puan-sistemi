@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bizi Değerlendirin</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="card" id="step1">
+        <h2 class="isletme-baslik" id="isletme-adi-gostergesi">Yükleniyor...</h2>
+        <p>Hizmetimizi nasıl buldunuz? Lütfen deneyiminizi puanlayın.</p>
+        <div class="stars" id="star-container">
+            <span data-val="5">★</span>
+            <span data-val="4">★</span>
+            <span data-val="3">★</span>
+            <span data-val="2">★</span>
+            <span data-val="1">★</span>
+        </div>
+    </div>
+
+    <div class="card hidden" id="step2-form">
+        <h2>Deneyiminizi İyileştirelim</h2>
+        <p>Size daha iyi hizmet verebilmemiz için lütfen eksiklerimizi yazın:</p>
+        <textarea id="feedback-text" rows="5" placeholder="Düşüncelerinizi buraya yazın..."></textarea>
+        <button id="send-btn">Geri Bildirimi Gönder</button>
+    </div>
+
+    <div class="card hidden" id="step3-thanks">
+        <h2>Teşekkürler!</h2>
+        <p>Geri bildiriminiz işletme yönetimine doğrudan iletilmiştir. Sorununuzu çözmek için en kısa sürede aksiyon alacağız.</p>
+    </div>
+
+    <script>
+        const subeVeritabani = {
+            "test-mekan": {
+                ad: "Örnek İşletme",
+                googleLink: "https://search.google.com/local/writereview?placeid=ChIJBQT23t49zBQRo70sv02rpLs"
+            },
+            "ahmet-usta": {
+                ad: "Ahmet Usta Kebap Salonu",
+                googleLink: "https://search.google.com/local/writereview?placeid=FARKLI_BIR_PLACE_ID"
+            }
+        };
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const isletmeId = urlParams.get('isletme') || 'test-mekan'; 
+        
+        const isletmeBilgisi = subeVeritabani[isletmeId] || { ad: "Değerli İşletmemiz", googleLink: "https://www.google.com/maps" };
+        document.getElementById('isletme-adi-gostergesi').innerText = isletmeBilgisi.ad;
+
+        let selectedStar = 0;
+        let veritabani = JSON.parse(localStorage.getItem('yorumSistemiDB')) || { scans: {}, reviews: {}, pozitifler: {} };
+        if (!veritabani.scans) veritabani.scans = {};
+        if (!veritabani.scans[isletmeId]) veritabani.scans[isletmeId] = [];
+        veritabani.scans[isletmeId].push(Date.now());
+        localStorage.setItem('yorumSistemiDB', JSON.stringify(veritabani));
+
+        const stars = document.querySelectorAll('.stars span');
+        stars.forEach(star => {
+            star.addEventListener('click', function() {
+                selectedStar = parseInt(this.getAttribute('data-val'));
+                stars.forEach(s => s.classList.remove('active'));
+                this.classList.add('active');
+
+                setTimeout(() => {
+                    if (selectedStar >= 4) {
+                        let db = JSON.parse(localStorage.getItem('yorumSistemiDB')) || { scans: {}, reviews: {}, pozitifler: {} };
+                        if (!db.pozitifler) db.pozitifler = {}; 
+                        if (!db.pozitifler[isletmeId]) db.pozitifler[isletmeId] = [];
+                        
+                        db.pozitifler[isletmeId].push({ yildiz: selectedStar, tarih: Date.now() });
+                        localStorage.setItem('yorumSistemiDB', JSON.stringify(db));
+                        
+                        window.location.href = isletmeBilgisi.googleLink; 
+                    } else {
+                        document.getElementById('step1').classList.add('hidden');
+                        document.getElementById('step2-form').classList.remove('hidden');
+                    }
+                }, 400);
+            });
+        });
+
+        document.getElementById('send-btn').addEventListener('click', () => {
+            const mesaj = document.getElementById('feedback-text').value;
+            if (!mesaj) return alert('Lütfen bir mesaj yazın.');
+            let db = JSON.parse(localStorage.getItem('yorumSistemiDB'));
+            if (!db.reviews) db.reviews = {};
+            if (!db.reviews[isletmeId]) db.reviews[isletmeId] = [];
+            
+            db.reviews[isletmeId].push({ yildiz: selectedStar, mesaj: mesaj, tarih: Date.now() });
+            localStorage.setItem('yorumSistemiDB', JSON.stringify(db));
+            document.getElementById('step2-form').classList.add('hidden');
+            document.getElementById('step3-thanks').classList.remove('hidden');
+        });
+    </script>
+</body>
+</html>

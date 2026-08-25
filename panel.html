@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İşletme Yönetim Paneli</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <div class="card login-box" id="login-screen">
+        <h2>Bayi Girişi</h2>
+        <p style="font-size: 14px; color: #666;">Kullanıcı adınız, size özel verilen ID'dir.</p>
+        <input type="text" id="username" placeholder="Kullanıcı Adı (Örn: test-mekan)">
+        <input type="password" id="password" placeholder="Şifre (Örn: 1234)">
+        <button id="login-btn">Giriş Yap</button>
+    </div>
+
+    <div class="panel-container hidden" id="dashboard-screen">
+        <h1 id="welcome-text" style="text-align:center; color: #007bff;">Yükleniyor...</h1>
+        <p style="text-align:center; color: #666; margin-top: -15px; margin-bottom: 30px;">Tüm zamanlara ait genel verileriniz.</p>
+        
+        <div class="stats-grid">
+            <div class="stat-box">
+                <h3 id="stat-scans">0</h3>
+                <p>Toplam Ziyaret (QR)</p>
+            </div>
+            <div class="stat-box">
+                <h3 id="stat-positive">0</h3>
+                <p>Google'a Giden (4-5 Yıldız)</p>
+            </div>
+            <div class="stat-box">
+                <h3 id="stat-reviews">0</h3>
+                <p>Engellenen (1-3 Yıldız)</p>
+            </div>
+            <div class="stat-box">
+                <h3 id="stat-avg">0</h3>
+                <p>Genel Ortalama Puan</p>
+            </div>
+        </div>
+
+        <div class="chart-wrapper">
+            <div class="chart-controls">
+                <button id="prev-week">◀ Önceki Hafta</button>
+                <h3 id="week-label">Yükleniyor...</h3>
+                <button id="next-week">Sonraki Hafta ▶</button>
+            </div>
+            <p style="text-align:center; font-size:12px; color:#888; margin-bottom:20px;">O güne ait yorumları görmek için grafikteki sütunlara tıklayın.</p>
+            <canvas id="myChart" height="100"></canvas>
+        </div>
+
+        <div class="table-header-row">
+            <h2 id="table-title">Tüm Yorumlar</h2>
+            <button id="clear-filter-btn" class="hidden">Filtreyi Temizle</button>
+        </div>
+        
+        <div id="review-cards-container" class="reviews-grid">
+            <!-- JavaScript ile doldurulacak -->
+        </div>
+    </div>
+
+    <script>
+        const bayilerDB = {
+            "test-mekan": { ad: "Örnek İşletme", sifre: "1234" },
+            "ahmet-usta": { ad: "Ahmet Usta Kebap Salonu", sifre: "1234" }
+        };
+
+        let aktifBayiId = ""; 
+        let chartInstance = null;
+        let weekOffset = 0; 
+        let filteredDateStart = null; 
+
+        document.getElementById('login-btn').addEventListener('click', () => {
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+            
+            if (bayilerDB[user] && bayilerDB[user].sifre === pass) {
+                aktifBayiId = user; 
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('dashboard-screen').classList.remove('hidden');
+                document.getElementById('welcome-text').innerText = bayilerDB[user].ad + " Yönetim Paneli";
+                
+                loadDashboard();
+            } else {
+                alert('Hatalı kullanıcı adı veya şifre! (Test için: test-mekan / 1234)');
+            }
+        });
+
+        document.getElementById('prev-week').addEventListener('click', () => {
+            weekOffset--;
+            loadDashboard();
+        });
+        document.getElementById('next-week').addEventListener('click', () => {
+            weekOffset++;
+            loadDashboard();
+        });
+        document.getElementById('clear-filter-btn').addEventListener('click', () => {
+            filteredDateStart = null; 
+            document.getElementById('clear-filter-btn').classList.add('hidden');
+            document.getElementById('table-title').innerText = "Tüm Yorumlar";
+            loadDashboard(); 
+        });
+
+        function getWeekDates(offset) {
+            let curr = new Date();
+            let day = curr.getDay(); 
+            let first = curr.getDate() - day + (day === 0 ? -6 : 1); 
+            let monday = new Date(curr.setDate(first));
+            monday.setHours(0,0,0,0);
+            monday.setDate(monday.getDate() + (offset * 7)); 
+            let days = [];
+            for(let i=0; i<7; i++) {
+                let d = new Date(monday);
+                d.setDate(monday.getDate() + i);
+                days.push(d);
+            }
+            return days;
+        }
+
+        function loadDashboard() {
+            const db = JSON.parse(localStorage.getItem('yorumSistemiDB')) || { scans: {}, reviews: {}, pozitifler: {} };
+            const allScans = db.scans ? (db.scans[aktifBayiId] || []) : [];
+            const allReviews = db.reviews ? (db.reviews[aktifBayiId] || []) : [];
+            const allPositives = db.pozitifler ? (db.pozitifler[aktifBayiId] || []) : [];
+
+            document.getElementById('stat-scans').innerText = allScans.length;
+            document.getElementById('stat-reviews').innerText = allReviews.length;
+            document.getElementById('stat-positive').innerText = allPositives.length;
+            
+            let totalStars = 0;
+            let totalVotes = allReviews.length + allPositives.length;
+            allReviews.forEach(r => totalStars += r.yildiz);
+            allPositives.forEach(p => totalStars += p.yildiz);
+            const overallAvg = totalVotes > 0 ? (totalStars / totalVotes).toFixed(1) : "0.0";
+            document.getElementById('stat-avg').innerText = overallAvg;
+
+            let weekDays = getWeekDates(weekOffset);
+            
+            const formatOpt = { day: 'numeric', month: 'short' };
+            const baslangicTarihi = weekDays[0].toLocaleDateString('tr-TR', formatOpt);
+            const bitisTarihi = weekDays[6].toLocaleDateString('tr-TR', formatOpt);
+            document.getElementById('week-label').innerText = `${baslangicTarihi} - ${bitisTarihi}`;
+
+            let chartLabels = [];
+            let chartDataAverages = [];
+            const gunIsimleri = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
+
+            weekDays.forEach((day, index) => {
+                chartLabels.push(`${gunIsimleri[index]} (${day.toLocaleDateString('tr-TR', formatOpt)})`);
+                
+                let dayStart = day.getTime();
+                let dayEnd = dayStart + (24 * 60 * 60 * 1000) - 1;
+
+                let dReviews = allReviews.filter(r => r.tarih >= dayStart && r.tarih <= dayEnd);
+                let dPositives = allPositives.filter(p => p.tarih >= dayStart && p.tarih <= dayEnd);
+                
+                let dTotalVotes = dReviews.length + dPositives.length;
+                if (dTotalVotes === 0) {
+                    chartDataAverages.push(0);
+                } else {
+                    let dSum = 0;
+                    dReviews.forEach(r => dSum += r.yildiz);
+                    dPositives.forEach(p => dSum += p.yildiz);
+                    chartDataAverages.push((dSum / dTotalVotes).toFixed(1));
+                }
+            });
+
+            const ctx = document.getElementById('myChart').getContext('2d');
+            if (chartInstance) chartInstance.destroy();
+            
+            chartInstance = new Chart(ctx, {
+                type: 'bar', 
+                data: {
+                    labels: chartLabels,
+                    datasets: [{
+                        label: 'Günlük Ortalama Puan',
+                        data: chartDataAverages,
+                        backgroundColor: '#007bff', 
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: { 
+                        y: { 
+                            min: 0,
+                            max: 5,
+                            ticks: { stepSize: 1 } 
+                        } 
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Ortalama: ' + context.raw + ' Yıldız';
+                                }
+                            }
+                        }
+                    },
+                    onClick: (event, elements) => {
+                        if (elements.length > 0) {
+                            const barIndex = elements[0].index;
+                            filteredDateStart = weekDays[barIndex].getTime(); 
+                            
+                            document.getElementById('clear-filter-btn').classList.remove('hidden');
+                            document.getElementById('table-title').innerText = chartLabels[barIndex] + " Tarihli Yorumlar";
+                            
+                            renderReviews(allReviews, filteredDateStart);
+                        }
+                    }
+                }
+            });
+
+            renderReviews(allReviews, filteredDateStart);
+        }
+
+        function renderReviews(allReviews, specificDayTimestamp) {
+            const container = document.getElementById('review-cards-container');
+            container.innerHTML = '';
+
+            let reviewsToShow = allReviews;
+
+            if (specificDayTimestamp) {
+                let dayEnd = specificDayTimestamp + (24 * 60 * 60 * 1000) - 1;
+                reviewsToShow = allReviews.filter(r => r.tarih >= specificDayTimestamp && r.tarih <= dayEnd);
+            }
+
+            if (reviewsToShow.length === 0) {
+                container.innerHTML = '<p style="text-align:center; width:100%; color:#888;">Bu aralıkta henüz kötü yorum bulunmuyor.</p>';
+                return;
+            }
+
+            [...reviewsToShow].reverse().forEach(rev => {
+                const dateObj = new Date(rev.tarih);
+                const dateStr = `${dateObj.getMonth() + 1}/${dateObj.getDate()}/${dateObj.getFullYear()}`;
+                
+                let badgeClass = 'badge-3';
+                if(rev.yildiz === 1) badgeClass = 'badge-1';
+                else if(rev.yildiz === 2) badgeClass = 'badge-2';
+                
+                container.innerHTML += `
+                    <div class="review-card">
+                        <div class="review-badge ${badgeClass}">${rev.yildiz}</div>
+                        <div class="review-content">
+                            <p class="review-text" title="${rev.mesaj}">${rev.mesaj}</p>
+                            <p class="review-date">${dateStr}</p>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+    </script>
+</body>
+</html>
