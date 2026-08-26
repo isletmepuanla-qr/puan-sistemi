@@ -15,24 +15,24 @@
 
     <div class="card login-box" id="login-screen">
         <h2>Bayi Girişi</h2>
-        <p style="font-size: 14px; color: #666;">Kullanıcı adınız, size özel verilen ID'dir.</p>
-        <input type="text" id="username" placeholder="Kullanıcı Adı (Örn: test-mekan)">
-        <input type="password" id="password" placeholder="Şifre (Örn: 1234)">
+        <p style="font-size: 14px; color: #666;">Size verilen bayi kullanıcı adı ve şifre ile giriş yapın.</p>
+        <input type="text" id="username" placeholder="Kullanıcı Adı">
+        <input type="password" id="password" placeholder="Şifre">
         <button id="login-btn">Giriş Yap</button>
     </div>
 
     <div class="panel-container hidden" id="dashboard-screen">
         <h1 id="welcome-text" style="text-align:center; color: #007bff;">Yükleniyor...</h1>
-        <p style="text-align:center; color: #666; margin-top: -15px; margin-bottom: 30px;">Tüm zamanlara ait genel verileriniz.</p>
+        <p style="text-align:center; color: #666; margin-top: -15px; margin-bottom: 30px;">Bu panel yalnızca giriş yapan bayinin kendi verilerini gösterir.</p>
         
         <div class="stats-grid">
             <div class="stat-box">
                 <h3 id="stat-scans">0</h3>
-                <p>Toplam Ziyaret (QR)</p>
+                <p>Toplam Ziyaret (QR)&(nfc)</p>
             </div>
             <div class="stat-box">
                 <h3 id="stat-positive">0</h3>
-                <p>Google'a Giden (4-5 Yıldız)</p>
+                <p>Google'a Yönlendirilen(4-5 Yıldız)</p>
             </div>
             <div class="stat-box">
                 <h3 id="stat-reviews">0</h3>
@@ -40,7 +40,7 @@
             </div>
             <div class="stat-box">
                 <h3 id="stat-avg">0</h3>
-                <p>Genel Ortalama Puan</p>
+                <p>Ortalama Puan</p>
             </div>
         </div>
 
@@ -55,7 +55,7 @@
         </div>
 
         <div class="table-header-row">
-            <h2 id="table-title">Tüm Yorumlar</h2>
+            <h2 id="table-title">İç Geri Bildirimler</h2>
             <button id="clear-filter-btn" class="hidden">Filtreyi Temizle</button>
         </div>
         
