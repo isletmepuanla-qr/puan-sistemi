@@ -27,13 +27,36 @@
         </div>
     </div>
 
-    <div class="card hidden" id="step2-form">
-        <h2>Deneyiminizi İyileştirelim</h2>
-        <p>Size daha iyi hizmet verebilmemiz için lütfen eksiklerimizi yazın:</p>
-        <textarea id="feedback-text" rows="5" placeholder="Düşüncelerinizi buraya yazın..."></textarea>
-        <button id="send-btn">Geri Bildirimi Gönder</button>
+   <!-- GOOGLE TARZI ŞİKAYET / GERİ BİLDİRİM EKRANI -->
+<div class="card hidden" id="step2-form" style="background-color: #121212; color: #fff; text-align: left; border-radius: 16px; padding: 25px;">
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+        <span style="background: #ea4335; color: white; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: bold;">R</span>
+        <div>
+            <h3 style="margin: 0; font-size: 16px; color: #fff;">Rodop Köftecisi</h3>
+            <p style="margin: 0; font-size: 12px; color: #aaa;">Google'da herkese açık olarak yayınlanır</p>
+        </div>
     </div>
 
+    <!-- Kategoriler (İsteğe bağlı ekstra puanlama) -->
+    <div style="margin-bottom: 20px; font-size: 14px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <span>Yiyecek</span>
+            <span style="color: #f5b301; font-size: 18px;">★★★☆☆</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <span>Hizmet</span>
+            <span style="color: #f5b301; font-size: 18px;">★★☆☆☆</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span>Atmosfer</span>
+            <span style="color: #f5b301; font-size: 18px;">★★★☆☆</span>
+        </div>
+    </div>
+
+    <textarea id="feedback-text" rows="4" placeholder="Kişisel deneyiminizi burada paylaşın..." style="background: #1e1e1e; color: #fff; border: 1px solid #444; width: 100%; padding: 12px; border-radius: 8px; box-sizing: border-box;"></textarea>
+    
+    <button id="send-btn" style="background: #8ab4f8; color: #202124; font-weight: bold; width: 100%; padding: 12px; border-radius: 8px; border: none; margin-top: 20px; cursor: pointer;">Yayınla</button>
+</div>
     <div class="card hidden" id="step3-thanks">
         <h2>Teşekkürler!</h2>
         <p>Geri bildiriminiz işletme yönetimine doğrudan iletilmiştir. Sorununuzu çözmek için en kısa sürede aksiyon alacağız.</p>
