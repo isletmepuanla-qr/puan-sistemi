@@ -36,23 +36,23 @@
             </div>
         </div>
 
-        <!-- Kategoriler için İnteraktif Yıldızlar -->
+        <!-- Kategoriler için İnteraktif Yıldızlar (Soldan Sağa Doğru) -->
         <div style="margin-bottom: 20px; font-size: 14px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                 <span>Yiyecek</span>
-                <div class="sub-stars" data-category="yiyecek" style="display: flex; flex-direction: row-reverse; gap: 4px; cursor: pointer; font-size: 20px; color: #555;">
+                <div class="sub-stars" data-category="yiyecek" style="display: flex; flex-direction: row; gap: 4px; cursor: pointer; font-size: 20px; color: #555;">
                     <span data-val="1">★</span><span data-val="2">★</span><span data-val="3">★</span><span data-val="4">★</span><span data-val="5">★</span>
                 </div>
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                 <span>Hizmet</span>
-                <div class="sub-stars" data-category="hizmet" style="display: flex; flex-direction: row-reverse; gap: 4px; cursor: pointer; font-size: 20px; color: #555;">
+                <div class="sub-stars" data-category="hizmet" style="display: flex; flex-direction: row; gap: 4px; cursor: pointer; font-size: 20px; color: #555;">
                     <span data-val="1">★</span><span data-val="2">★</span><span data-val="3">★</span><span data-val="4">★</span><span data-val="5">★</span>
                 </div>
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                 <span>Atmosfer</span>
-                <div class="sub-stars" data-category="atmosfer" style="display: flex; flex-direction: row-reverse; gap: 4px; cursor: pointer; font-size: 20px; color: #555;">
+                <div class="sub-stars" data-category="atmosfer" style="display: flex; flex-direction: row; gap: 4px; cursor: pointer; font-size: 20px; color: #555;">
                     <span data-val="1">★</span><span data-val="2">★</span><span data-val="3">★</span><span data-val="4">★</span><span data-val="5">★</span>
                 </div>
             </div>
@@ -115,7 +115,7 @@
         // QR OKUTMAYI (ZİYARETİ) FIREBASE'E KAYDET
         database.ref('scans/' + isletmeId).push({ tarih: Date.now() });
 
-        // Kategori yıldızlarının tıklama ve renk değişim mantığı
+        // Kategori yıldızlarının tıklama ve renk değişim mantığı (Soldan Sağa Doğru)
         document.querySelectorAll('.sub-stars').forEach(container => {
             const cat = container.getAttribute('data-category');
             const stars = container.querySelectorAll('span');
@@ -125,7 +125,7 @@
                     subRatings[cat] = val;
                     
                     stars.forEach(s => {
-                        if (parseInt(s.getAttribute('s' in s ? 's' : s.getAttribute('data-val'))) <= val || parseInt(s.getAttribute('data-val')) <= val) {
+                        if (parseInt(s.getAttribute('data-val')) <= val) {
                             s.style.color = '#f5b301';
                         } else {
                             s.style.color = '#555';
