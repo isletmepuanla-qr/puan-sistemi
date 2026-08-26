@@ -41,5 +41,59 @@ button:hover { background: #222b45; }
 .review-text { font-size: 14px; color: #222; margin: 0; font-weight: 500; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; line-height: 1.4; }
 .review-date { font-size: 12px; color: #888; margin: 0; }
 
+
+
+
+
+/* TELEFONLAR İÇİN ÖZEL MOBİL GÖRÜNÜM (Responsive Tasarım) */
+@media screen and (max-width: 768px) {
+    body {
+        padding: 10px; /* Mobilde kenar boşluklarını daralt */
+    }
+
+    .panel-container {
+        padding: 15px; /* Panel iç boşluğunu telefona uyarla */
+        border-radius: 8px;
+    }
+
+    /* İstatistik kutularını mobilde alt alta veya 2'li düzenle */
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .stat-box {
+        padding: 12px;
+    }
+
+    .stat-box h3 {
+        font-size: 24px !important; /* Sayıları mobilde biraz küçült */
+    }
+
+    /* Üst kısımdaki karşılama ve çıkış butonunu alt alta düzenle */
+    #dashboard-screen > div:first-child {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 10px;
+    }
+
+    #logout-btn {
+        width: 100% !important; /* Çıkış butonunu mobilde tam genişlik yap */
+    }
+
+    /* Grafik ve tablo kontrollerini mobilde uyumlu hale getir */
+    .chart-controls {
+        flex-direction: column;
+        gap: 10px;
+        align-items: stretch;
+        padding: 0;
+    }
+
+    .reviews-grid {
+        grid-template-columns: 1fr !important; /* Yorum kartlarını mobilde tek sütun yap */
+    }
+}
+
 .login-box { max-width: 400px; margin: 100px auto; }
 .login-box input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
