@@ -15,15 +15,23 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 </head>
 <body>
-    <div class="card" id="step1">
-        <h2 class="isletme-baslik" id="isletme-adi-gostergesi">Yükleniyor...</h2>
-        <p>Hizmetimizi nasıl buldunuz? Lütfen deneyiminizi puanlayın.</p>
-        <div class="stars" id="star-container">
-            <span data-val="5">★</span>
-            <span data-val="4">★</span>
-            <span data-val="3">★</span>
-            <span data-val="2">★</span>
+    <div class="card" id="step1" style="background-color: #121212; color: #fff; text-align: left; border-radius: 16px; padding: 25px; box-sizing: border-box; max-width: 500px; margin: 40px auto;">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+            <span id="form-business-initial-1" style="background: #ea4335; color: white; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: bold;">R</span>
+            <div>
+                <h3 class="isletme-baslik" id="isletme-adi-gostergesi" style="margin: 0; font-size: 16px; color: #fff;">Yükleniyor...</h3>
+                <p style="margin: 0; font-size: 12px; color: #aaa;">Google'da herkese açık olarak yayınlanır</p>
+            </div>
+        </div>
+        <p style="margin-bottom: 20px; font-size: 14px; color: #ccc;">Hizmetimizi nasıl buldunuz? Lütfen deneyiminizi puanlayın.</p>
+        
+        <!-- Soldan sağa düzgün akan yıldızlar -->
+        <div class="stars" id="star-container" style="display: flex; flex-direction: row; justify-content: center; gap: 12px; font-size: 36px; color: #555; cursor: pointer;">
             <span data-val="1">★</span>
+            <span data-val="2">★</span>
+            <span data-val="3">★</span>
+            <span data-val="4">★</span>
+            <span data-val="5">★</span>
         </div>
     </div>
 
@@ -106,6 +114,8 @@
         
         // İşletme adını ve baş harfini dinamik olarak yerleştir
         document.getElementById('isletme-adi-gostergesi').innerText = isletmeBilgisi.ad;
+        // İlk ekrandaki Google tarzı başlık ve harf logosu için:
+document.getElementById('form-business-initial-1').innerText = isletmeBilgisi.ad.charAt(0).toUpperCase();
         document.getElementById('form-business-name').innerText = isletmeBilgisi.ad;
         document.getElementById('form-business-initial').innerText = isletmeBilgisi.ad.charAt(0).toUpperCase();
 
