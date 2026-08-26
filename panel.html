@@ -21,10 +21,17 @@
         <button id="login-btn">Giriş Yap</button>
     </div>
 
-    <div class="panel-container hidden" id="dashboard-screen">
-        <h1 id="welcome-text" style="text-align:center; color: #007bff;">Yükleniyor...</h1>
-        <p style="text-align:center; color: #666; margin-top: -15px; margin-bottom: 30px;">Bu panel yalnızca giriş yapan bayinin kendi verilerini gösterir.</p>
-        
+    
+<div class="panel-container hidden" id="dashboard-screen">
+    <!-- Üst Kısım: Başlık ve Çıkış Butonu -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 15px;">
+        <h1 id="welcome-text" style="color: #111625; margin: 0; font-size: 26px;">Yükleniyor...</h1>
+        <button id="logout-btn" style="width: auto; margin: 0; padding: 10px 20px; background-color: #111625;">Çıkış Yap</button>
+    </div>
+    <p style="color: #666; margin-top: 0; margin-bottom: 30px;">Bu panel yalnızca giriş yapan bayinin kendi verilerini gösterir.</p>
+
+
+    
         <div class="stats-grid">
             <div class="stat-box">
                 <h3 id="stat-scans">0</h3>
@@ -65,6 +72,7 @@
     </div>
 
     <script>
+ 
         // FIREBASE BAĞLANTISI
         const firebaseConfig = {
             apiKey: "AIzaSyCm2Hzf_JpAlMiLcKXPVqk_Rukr5Ub8krQ",
@@ -105,6 +113,14 @@
                 alert('Hatalı kullanıcı adı veya şifre!');
             }
         });
+
+        document.getElementById('logout-btn').addEventListener('click', () => {
+    document.getElementById('dashboard-screen').classList.add('hidden');
+    document.getElementById('login-screen').classList.remove('hidden');
+    document.getElementById('username').value = '';
+    document.getElementById('password').value = '';
+    aktifBayiId = "";
+});
 
         document.getElementById('prev-week').addEventListener('click', () => { weekOffset--; loadDashboard(); });
         document.getElementById('next-week').addEventListener('click', () => { weekOffset++; loadDashboard(); });
