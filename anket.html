@@ -149,9 +149,14 @@ document.getElementById('form-business-initial-1').innerText = isletmeBilgisi.ad
         stars.forEach(star => {
             star.addEventListener('click', function() {
                 selectedStar = parseInt(this.getAttribute('data-val'));
-                stars.forEach(s => s.classList.remove('active'));
-                this.classList.add('active');
-
+               // Soldan sağa doğru yıldızları sarı yap
+                stars.forEach(s => {
+                    if (parseInt(s.getAttribute('data-val')) <= selectedStar) {
+                        s.style.color = '#f5b301';
+                    } else {
+                        s.style.color = '#555';
+                    }
+                });
                 setTimeout(() => {
                     if (selectedStar >= 4) {
                         // 4-5 YILDIZ: Firebase'e kaydet ve Google'a yolla
