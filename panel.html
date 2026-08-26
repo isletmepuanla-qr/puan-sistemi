@@ -6,6 +6,10 @@
     <title>İşletme Yönetim Paneli</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Firebase SDK (v8) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 </head>
 <body>
 
@@ -61,6 +65,20 @@
     </div>
 
     <script>
+        // FIREBASE BAĞLANTISI
+        const firebaseConfig = {
+            apiKey: "AIzaSyCm2Hzf_JpAlMiLcKXPVqk_Rukr5Ub8krQ",
+            authDomain: "puan-sistemi-d24f2.firebaseapp.com",
+            databaseURL: "https://puan-sistemi-d24f2-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "puan-sistemi-d24f2",
+            storageBucket: "puan-sistemi-d24f2.firebasestorage.app",
+            messagingSenderId: "852284355429",
+            appId: "1:852284355429:web:4015f26779c5a5f854a78c",
+            measurementId: "G-0DWXQ5TJZ5"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
         const bayilerDB = {
             "test-mekan": { ad: "Örnek İşletme", sifre: "1234" },
             "ahmet-usta": { ad: "Ahmet Usta Kebap Salonu", sifre: "1234" }
@@ -83,18 +101,12 @@
                 
                 loadDashboard();
             } else {
-                alert('Hatalı kullanıcı adı veya şifre! (Test için: test-mekan / 1234)');
+                alert('Hatalı kullanıcı adı veya şifre!');
             }
         });
 
-        document.getElementById('prev-week').addEventListener('click', () => {
-            weekOffset--;
-            loadDashboard();
-        });
-        document.getElementById('next-week').addEventListener('click', () => {
-            weekOffset++;
-            loadDashboard();
-        });
+        document.getElementById('prev-week').addEventListener('click', () => { weekOffset--; loadDashboard(); });
+        document.getElementById('next-week').addEventListener('click', () => { weekOffset++; loadDashboard(); });
         document.getElementById('clear-filter-btn').addEventListener('click', () => {
             filteredDateStart = null; 
             document.getElementById('clear-filter-btn').classList.add('hidden');
@@ -119,107 +131,97 @@
         }
 
         function loadDashboard() {
-            const db = JSON.parse(localStorage.getItem('yorumSistemiDB')) || { scans: {}, reviews: {}, pozitifler: {} };
-            const allScans = db.scans ? (db.scans[aktifBayiId] || []) : [];
-            const allReviews = db.reviews ? (db.reviews[aktifBayiId] || []) : [];
-            const allPositives = db.pozitifler ? (db.pozitifler[aktifBayiId] || []) : [];
-
-            document.getElementById('stat-scans').innerText = allScans.length;
-            document.getElementById('stat-reviews').innerText = allReviews.length;
-            document.getElementById('stat-positive').innerText = allPositives.length;
-            
-            let totalStars = 0;
-            let totalVotes = allReviews.length + allPositives.length;
-            allReviews.forEach(r => totalStars += r.yildiz);
-            allPositives.forEach(p => totalStars += p.yildiz);
-            const overallAvg = totalVotes > 0 ? (totalStars / totalVotes).toFixed(1) : "0.0";
-            document.getElementById('stat-avg').innerText = overallAvg;
-
-            let weekDays = getWeekDates(weekOffset);
-            
-            const formatOpt = { day: 'numeric', month: 'short' };
-            const baslangicTarihi = weekDays[0].toLocaleDateString('tr-TR', formatOpt);
-            const bitisTarihi = weekDays[6].toLocaleDateString('tr-TR', formatOpt);
-            document.getElementById('week-label').innerText = `${baslangicTarihi} - ${bitisTarihi}`;
-
-            let chartLabels = [];
-            let chartDataAverages = [];
-            const gunIsimleri = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
-
-            weekDays.forEach((day, index) => {
-                chartLabels.push(`${gunIsimleri[index]} (${day.toLocaleDateString('tr-TR', formatOpt)})`);
+            // FIREBASE'DEN VERİLERİ ÇEK
+            database.ref().once('value').then((snapshot) => {
+                const data = snapshot.val() || {};
                 
-                let dayStart = day.getTime();
-                let dayEnd = dayStart + (24 * 60 * 60 * 1000) - 1;
+                // Object.values() ile Firebase objelerini dizilere (Array) çeviriyoruz
+                const allScansObj = data.scans ? (data.scans[aktifBayiId] || {}) : {};
+                const allReviewsObj = data.reviews ? (data.reviews[aktifBayiId] || {}) : {};
+                const allPositivesObj = data.pozitifler ? (data.pozitifler[aktifBayiId] || {}) : {};
 
-                let dReviews = allReviews.filter(r => r.tarih >= dayStart && r.tarih <= dayEnd);
-                let dPositives = allPositives.filter(p => p.tarih >= dayStart && p.tarih <= dayEnd);
+                const allScans = Object.values(allScansObj);
+                const allReviews = Object.values(allReviewsObj);
+                const allPositives = Object.values(allPositivesObj);
+
+                document.getElementById('stat-scans').innerText = allScans.length;
+                document.getElementById('stat-reviews').innerText = allReviews.length;
+                document.getElementById('stat-positive').innerText = allPositives.length;
                 
-                let dTotalVotes = dReviews.length + dPositives.length;
-                if (dTotalVotes === 0) {
-                    chartDataAverages.push(0);
-                } else {
-                    let dSum = 0;
-                    dReviews.forEach(r => dSum += r.yildiz);
-                    dPositives.forEach(p => dSum += p.yildiz);
-                    chartDataAverages.push((dSum / dTotalVotes).toFixed(1));
-                }
-            });
+                let totalStars = 0;
+                let totalVotes = allReviews.length + allPositives.length;
+                allReviews.forEach(r => totalStars += r.yildiz);
+                allPositives.forEach(p => totalStars += p.yildiz);
+                const overallAvg = totalVotes > 0 ? (totalStars / totalVotes).toFixed(1) : "0.0";
+                document.getElementById('stat-avg').innerText = overallAvg;
 
-            const ctx = document.getElementById('myChart').getContext('2d');
-            if (chartInstance) chartInstance.destroy();
-            
-            chartInstance = new Chart(ctx, {
-                type: 'bar', 
-                data: {
-                    labels: chartLabels,
-                    datasets: [{
-                        label: 'Günlük Ortalama Puan',
-                        data: chartDataAverages,
-                        backgroundColor: '#007bff', 
-                        borderRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: { 
-                        y: { 
-                            min: 0,
-                            max: 5,
-                            ticks: { stepSize: 1 } 
-                        } 
+                let weekDays = getWeekDates(weekOffset);
+                const formatOpt = { day: 'numeric', month: 'short' };
+                const baslangicTarihi = weekDays[0].toLocaleDateString('tr-TR', formatOpt);
+                const bitisTarihi = weekDays[6].toLocaleDateString('tr-TR', formatOpt);
+                document.getElementById('week-label').innerText = `${baslangicTarihi} - ${bitisTarihi}`;
+
+                let chartLabels = [];
+                let chartDataAverages = [];
+                const gunIsimleri = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
+
+                weekDays.forEach((day, index) => {
+                    chartLabels.push(`${gunIsimleri[index]} (${day.toLocaleDateString('tr-TR', formatOpt)})`);
+                    
+                    let dayStart = day.getTime();
+                    let dayEnd = dayStart + (24 * 60 * 60 * 1000) - 1;
+
+                    let dReviews = allReviews.filter(r => r.tarih >= dayStart && r.tarih <= dayEnd);
+                    let dPositives = allPositives.filter(p => p.tarih >= dayStart && p.tarih <= dayEnd);
+                    
+                    let dTotalVotes = dReviews.length + dPositives.length;
+                    if (dTotalVotes === 0) {
+                        chartDataAverages.push(0);
+                    } else {
+                        let dSum = 0;
+                        dReviews.forEach(r => dSum += r.yildiz);
+                        dPositives.forEach(p => dSum += p.yildiz);
+                        chartDataAverages.push((dSum / dTotalVotes).toFixed(1));
+                    }
+                });
+
+                const ctx = document.getElementById('myChart').getContext('2d');
+                if (chartInstance) chartInstance.destroy();
+                
+                chartInstance = new Chart(ctx, {
+                    type: 'bar', 
+                    data: {
+                        labels: chartLabels,
+                        datasets: [{
+                            label: 'Günlük Ortalama Puan',
+                            data: chartDataAverages,
+                            backgroundColor: '#007bff', 
+                            borderRadius: 4
+                        }]
                     },
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return 'Ortalama: ' + context.raw + ' Yıldız';
-                                }
+                    options: {
+                        responsive: true,
+                        scales: { y: { min: 0, max: 5, ticks: { stepSize: 1 } } },
+                        plugins: { legend: { display: false } },
+                        onClick: (event, elements) => {
+                            if (elements.length > 0) {
+                                const barIndex = elements[0].index;
+                                filteredDateStart = weekDays[barIndex].getTime(); 
+                                document.getElementById('clear-filter-btn').classList.remove('hidden');
+                                document.getElementById('table-title').innerText = chartLabels[barIndex] + " Tarihli Yorumlar";
+                                renderReviews(allReviews, filteredDateStart);
                             }
                         }
-                    },
-                    onClick: (event, elements) => {
-                        if (elements.length > 0) {
-                            const barIndex = elements[0].index;
-                            filteredDateStart = weekDays[barIndex].getTime(); 
-                            
-                            document.getElementById('clear-filter-btn').classList.remove('hidden');
-                            document.getElementById('table-title').innerText = chartLabels[barIndex] + " Tarihli Yorumlar";
-                            
-                            renderReviews(allReviews, filteredDateStart);
-                        }
                     }
-                }
-            });
+                });
 
-            renderReviews(allReviews, filteredDateStart);
+                renderReviews(allReviews, filteredDateStart);
+            });
         }
 
         function renderReviews(allReviews, specificDayTimestamp) {
             const container = document.getElementById('review-cards-container');
             container.innerHTML = '';
-
             let reviewsToShow = allReviews;
 
             if (specificDayTimestamp) {
@@ -232,9 +234,10 @@
                 return;
             }
 
-            [...reviewsToShow].reverse().forEach(rev => {
+            // Tarihe göre sırala (En yeni en üstte)
+            reviewsToShow.sort((a, b) => b.tarih - a.tarih).forEach(rev => {
                 const dateObj = new Date(rev.tarih);
-                const dateStr = `${dateObj.getMonth() + 1}/${dateObj.getDate()}/${dateObj.getFullYear()}`;
+                const dateStr = `${dateObj.getDate()}/${dateObj.getMonth() + 1}/${dateObj.getFullYear()} ${dateObj.getHours()}:${String(dateObj.getMinutes()).padStart(2, '0')}`;
                 
                 let badgeClass = 'badge-3';
                 if(rev.yildiz === 1) badgeClass = 'badge-1';
