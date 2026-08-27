@@ -14,7 +14,6 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
-    <!-- GOOGLE HARİTALAR / KOYU TEMA STİLLERİ -->
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #121212; margin: 0; padding: 20px; color: #e8eaed; }
         .hidden { display: none !important; }
@@ -29,7 +28,6 @@
         /* Panel Konteynerı */
         .panel-container { max-width: 1000px; margin: 0 auto; background: #1e1e1e; padding: 30px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); border: 1px solid #333; }
         
-        /* Butonlar ve Başlıklar */
         button { background: #2d2d2d; color: #e8eaed; border: 1px solid #444; padding: 10px 20px; border-radius: 8px; font-size: 14px; cursor: pointer; transition: background 0.2s; }
         button:hover { background: #3c4043; }
         
@@ -55,16 +53,12 @@
         .review-card { background: #252525; border: 1px solid #333; border-radius: 12px; padding: 16px; display: flex; align-items: flex-start; gap: 15px; }
         .review-badge { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; flex-shrink: 0; }
         
-        /* Yıldız Rozet Renkleri (Sarı Tonları) */
         .badge-1 { background-color: rgba(245, 179, 1, 0.15); color: #f5b301; border: 1px solid rgba(245, 179, 1, 0.3); }
-        .badge-2 { background-color: rgba(245, 179, 1, 0.15); color: #f5b301; border: 1px solid rgba(245, 179, 1, 0.3); }
-        .badge-3 { background-color: rgba(245, 179, 1, 0.15); color: #f5b301; border: 1px solid rgba(245, 179, 1, 0.3); }
 
         .review-content { display: flex; flex-direction: column; gap: 6px; overflow: hidden; width: 100%; }
         .review-text { font-size: 14px; color: #e8eaed; margin: 0; word-break: break-word; }
         .review-date { font-size: 12px; color: #9aa0a6; margin: 0; }
 
-        /* Mobil Uyum */
         @media screen and (max-width: 768px) {
             body { padding: 10px; }
             .panel-container { padding: 15px; }
@@ -82,7 +76,7 @@
     <div class="card login-box" id="login-screen">
         <h2>Bayi Girişi</h2>
         <p style="font-size: 13px; color: #9aa0a6;">Size verilen bayi kullanıcı adı ve şifre ile giriş yapın.</p>
-        <input type="text" id="username" placeholder="Kullanıcı Adı">
+        <input type="text" id="username" placeholder="Kullanıcı Adı (ör: onur-iskembe)">
         <input type="password" id="password" placeholder="Şifre">
         <button id="login-btn">Giriş Yap</button>
     </div>
@@ -99,7 +93,7 @@
         <div class="stats-grid">
             <div class="stat-box">
                 <h3 id="stat-scans">0</h3>
-                <p>Toplam Ziyaret (QR)&(nfc)</p>
+                <p>Toplam Ziyaret (QR & NFC)</p>
             </div>
             <div class="stat-box">
                 <h3 id="stat-positive">0</h3>
@@ -107,7 +101,7 @@
             </div>
             <div class="stat-box">
                 <h3 id="stat-reviews">0</h3>
-                <p>Engellenen (1-3 Yıldız)</p>
+                <p>İç Geri Bildirim (1-3 Yıldız)</p>
             </div>
             <div class="stat-box">
                 <h3 id="stat-avg">0</h3>
@@ -135,14 +129,11 @@
         </div>
         
         <!-- YORUM KARTLARI -->
-        <div id="review-cards-container" class="reviews-grid">
-            <!-- JavaScript ile doldurulacak -->
-        </div>
+        <div id="review-cards-container" class="reviews-grid"></div>
     </div>
 
-    <!-- JAVASCRIPT İŞLEMLERİ -->
+    <!-- JAVASCRIPT İŞLEMLERİ (GÜVENLİ FIREBASE GİRİŞ SİSTEMİ) -->
     <script>
-        // FIREBASE BAĞLANTISI
         const firebaseConfig = {
             apiKey: "AIzaSyCm2Hzf_JpAlMiLcKXPVqk_Rukr5Ub8krQ",
             authDomain: "puan-sistemi-d24f2.firebaseapp.com",
@@ -156,33 +147,38 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // BAYİ VERİTABANI
-        const bayilerDB = {
-            "test-mekan": { ad: "Örnek İşletme", sifre: "1234" },
-            "ahmet-usta": { ad: "Ahmet Usta Kebap Salonu", sifre: "1234" },
-            "rodop-koftecisi": { ad: "Rodop Köftecisi", sifre: "1234" },
-            "donerus-doner": { ad: "dönerus döner", sifre: "1234" }
-        };
-
         let aktifBayiId = ""; 
         let chartInstance = null;
         let weekOffset = 0; 
         let filteredDateStart = null; 
 
+        // GİRİŞ YAP BUTONU (Şifreleri Doğrudan Firebase'den Kontrol Eder)
         document.getElementById('login-btn').addEventListener('click', () => {
             const user = document.getElementById('username').value.trim();
             const pass = document.getElementById('password').value.trim();
             
-            if (bayilerDB[user] && bayilerDB[user].sifre === pass) {
-                aktifBayiId = user; 
-                document.getElementById('login-screen').classList.add('hidden');
-                document.getElementById('dashboard-screen').classList.remove('hidden');
-                document.getElementById('welcome-text').innerText = bayilerDB[user].ad + " Yönetim Paneli";
-                
-                loadDashboard();
-            } else {
-                alert('Hatalı kullanıcı adı veya şifre!');
+            if (!user || !pass) {
+                return alert('Lütfen kullanıcı adı ve şifre girin.');
             }
+
+            // Firebase'de "bayiler" altındaki kullanıcıyı ara
+            database.ref('bayiler/' + user).once('value').then((snapshot) => {
+                const bayiBilgisi = snapshot.val();
+                
+                if (bayiBilgisi && bayiBilgisi.sifre === pass) {
+                    aktifBayiId = user; 
+                    document.getElementById('login-screen').classList.add('hidden');
+                    document.getElementById('dashboard-screen').classList.remove('hidden');
+                    document.getElementById('welcome-text').innerText = bayiBilgisi.ad + " Yönetim Paneli";
+                    
+                    loadDashboard();
+                } else {
+                    alert('Hatalı kullanıcı adı veya şifre!');
+                }
+            }).catch((error) => {
+                console.error("Giriş hatası:", error);
+                alert('Bağlantı hatası oluştu!');
+            });
         });
 
         document.getElementById('logout-btn').addEventListener('click', () => {
@@ -281,7 +277,7 @@
                         datasets: [{
                             label: 'Günlük Ortalama Puan',
                             data: chartDataAverages,
-                            backgroundColor: '#f5b301', /* Google Haritalar / Sarı Ton */
+                            backgroundColor: '#f5b301',
                             borderRadius: 6
                         }]
                     },
