@@ -12,6 +12,8 @@
 
     <!-- Firebase SDK (v8) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <!-- Authentication (Kimlik Doğrulama) Kütüphanesi Eklendi -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <style>
@@ -132,7 +134,6 @@
         <div id="review-cards-container" class="reviews-grid"></div>
     </div>
 
-    <!-- JAVASCRIPT İŞLEMLERİ (GÜVENLİ FIREBASE GİRİŞ SİSTEMİ) -->
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyCm2Hzf_JpAlMiLcKXPVqk_Rukr5Ub8krQ",
@@ -152,7 +153,7 @@
         let weekOffset = 0; 
         let filteredDateStart = null; 
 
-        // GİRİŞ YAP BUTONU (Şifreleri Doğrudan Firebase'den Kontrol Eder)
+        // GİRİŞ YAP BUTONU (Yeni Güvenli Auth Sistemi)
         document.getElementById('login-btn').addEventListener('click', () => {
             const user = document.getElementById('username').value.trim();
             const pass = document.getElementById('password').value.trim();
@@ -161,32 +162,42 @@
                 return alert('Lütfen kullanıcı adı ve şifre girin.');
             }
 
-            // Firebase'de "bayiler" altındaki kullanıcıyı ara
-            database.ref('bayiler/' + user).once('value').then((snapshot) => {
-                const bayiBilgisi = snapshot.val();
-                
-                if (bayiBilgisi && bayiBilgisi.sifre === pass) {
+            // Arka planda mail formatına çeviriyoruz
+            const gizliMail = user + "@panel.com";
+
+            // Firebase'in güvenli kimlik doğrulama sunucusuna soruyoruz
+            firebase.auth().signInWithEmailAndPassword(gizliMail, pass)
+                .then((userCredential) => {
+                    // ŞİFRE DOĞRU! Giriş başarılı.
                     aktifBayiId = user; 
                     document.getElementById('login-screen').classList.add('hidden');
                     document.getElementById('dashboard-screen').classList.remove('hidden');
-                    document.getElementById('welcome-text').innerText = bayiBilgisi.ad + " Yönetim Paneli";
+                    
+                    // Sadece ekranda dükkanın güzel adını (Örn: "Ahmet Usta Kebap") göstermek için veritabanına bak
+                    database.ref('bayiler/' + user).once('value').then((snapshot) => {
+                        const bayiBilgisi = snapshot.val();
+                        const dukkanAdi = (bayiBilgisi && bayiBilgisi.ad) ? bayiBilgisi.ad : user;
+                        document.getElementById('welcome-text').innerText = dukkanAdi + " Yönetim Paneli";
+                    });
                     
                     loadDashboard();
-                } else {
+                })
+                .catch((error) => {
+                    console.error("Giriş hatası:", error);
                     alert('Hatalı kullanıcı adı veya şifre!');
-                }
-            }).catch((error) => {
-                console.error("Giriş hatası:", error);
-                alert('Bağlantı hatası oluştu!');
-            });
+                });
         });
 
+        // ÇIKIŞ YAP BUTONU
         document.getElementById('logout-btn').addEventListener('click', () => {
-            document.getElementById('dashboard-screen').classList.add('hidden');
-            document.getElementById('login-screen').classList.remove('hidden');
-            document.getElementById('username').value = '';
-            document.getElementById('password').value = '';
-            aktifBayiId = "";
+            // Firebase'in oturumu tamamen kapatmasını sağlıyoruz
+            firebase.auth().signOut().then(() => {
+                document.getElementById('dashboard-screen').classList.add('hidden');
+                document.getElementById('login-screen').classList.remove('hidden');
+                document.getElementById('username').value = '';
+                document.getElementById('password').value = '';
+                aktifBayiId = "";
+            });
         });
 
         document.getElementById('prev-week').addEventListener('click', () => { weekOffset--; loadDashboard(); });
